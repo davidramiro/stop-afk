@@ -3,13 +3,12 @@ package internal
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 const (
 	registryPath       = `SOFTWARE\WOW6432Node\Valve\cs2`
 	registryKey        = "installpath"
-	steamappsCSPath    = "steamapps/common/Counter-Strike Global Offensive"
-	cfgPath            = `\game\csgo\cfg\gamestate_integration_stop_afk.cfg`
 	cfgContentTemplate = `"Stop AFK v%s"
 {
  "uri" "http://127.0.0.1:%d"
@@ -23,6 +22,11 @@ const (
  }
 }
 `
+)
+
+var (
+	cfgPath         = filepath.Join("game", "csgo", "cfg", "gamestate_integration_stop_afk.cfg")
+	steamappsCSPath = filepath.Join("steamapps", "common", "Counter-Strike Global Offensive")
 )
 
 type Config struct {
@@ -60,7 +64,7 @@ func (c *Config) Init(version string, port int) {
 }
 
 func (c *Config) checkConfig(cs2Path string, version string, port int) (bool, error) {
-	f, err := os.Open(cs2Path + cfgPath)
+	f, err := os.Open(filepath.Join(cs2Path, cfgPath))
 	if err != nil {
 		if os.IsNotExist(err) {
 			c.logCh <- LogMessage{LogSeverityOK, "gamestate config not found, creating one"}
@@ -92,7 +96,7 @@ func (c *Config) createConfig() error {
 		return fmt.Errorf("could not check for cs2 directory: %w", err)
 	}
 
-	f, err := os.Create(cs2Path + cfgPath)
+	f, err := os.Create(filepath.Join(cs2Path, cfgPath))
 	if err != nil {
 		return fmt.Errorf("failed to create cfg file: %w", err)
 	}
