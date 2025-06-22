@@ -1,13 +1,8 @@
 package internal
 
 import (
-	"errors"
 	"fmt"
-	"golang.org/x/sys/windows/registry"
 	"os"
-	"os/user"
-	"path/filepath"
-	"runtime"
 )
 
 const (
@@ -41,7 +36,7 @@ func NewConfig(logCh chan<- LogMessage) *Config {
 }
 
 func (c *Config) Init(version string, port int) {
-	cs2Path, err := c.getInstallPath()
+	cs2Path, err := c.findCS2()
 	if err != nil {
 		c.logCh <- LogMessage{LogSeverityFail, "cs2 installation not found."}
 	}
@@ -92,7 +87,7 @@ func (c *Config) checkConfig(cs2Path string, version string, port int) (bool, er
 }
 
 func (c *Config) createConfig() error {
-	cs2Path, err := c.getInstallPath()
+	cs2Path, err := c.findCS2()
 	if err != nil {
 		return fmt.Errorf("could not check for cs2 directory: %w", err)
 	}
@@ -108,60 +103,7 @@ func (c *Config) createConfig() error {
 		return fmt.Errorf("failed to write cfg file contents: %w", err)
 	}
 
+	c.logCh <- LogMessage{LogSeverityOK, "gamestate config created, restart cs2 if running"}
+
 	return nil
-}
-
-func (c *Config) getInstallPath() (string, error) {
-	switch runtime.GOOS {
-	case "windows":
-		return c.findCS2Windows()
-	case "linux":
-		return c.findCS2Linux()
-	default:
-		return "", fmt.Errorf("unsupported OS: %s", runtime.GOOS)
-
-	}
-}
-
-func (c *Config) findCS2Windows() (string, error) {
-	c.logCh <- LogMessage{LogSeverityInfo, "checking registry for cs2 install path"}
-	k, err := registry.OpenKey(registry.LOCAL_MACHINE, registryPath, registry.QUERY_VALUE)
-	if err != nil {
-		return "", fmt.Errorf("failed to open steam registry path: %w", err)
-	}
-	defer k.Close()
-
-	p, _, err := k.GetStringValue(registryKey)
-	if err != nil {
-		return "", fmt.Errorf("failed to get cs2 install path: %w", err)
-	}
-
-	return p, nil
-}
-
-func (c *Config) findCS2Linux() (string, error) {
-	c.logCh <- LogMessage{LogSeverityInfo, "checking common linux steam installation paths"}
-
-	u, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-	home := u.HomeDir
-
-	candidates := []string{
-		filepath.Join(home, ".steam", "steam"),
-		filepath.Join(home, ".steam", "root"),
-		filepath.Join(home, ".local", "share", "Steam"),
-		filepath.Join(home, ".var", "app", "com.valvesoftware.Steam", ".steam"),
-	}
-
-	for _, path := range candidates {
-		realPath, err := filepath.EvalSymlinks(path)
-		if err == nil {
-			if _, err := os.Stat(filepath.Join(realPath, steamappsCSPath)); err == nil {
-				return realPath + steamappsCSPath, nil
-			}
-		}
-	}
-	return "", errors.New("steam install folder not found")
 }

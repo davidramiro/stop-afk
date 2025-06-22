@@ -20,7 +20,7 @@ func main() {
 	c := internal.NewConfig(logCh)
 	go c.Init(version, port)
 
-	s := internal.NewServer(port, roundCh)
+	s := internal.NewServer(port, roundCh, logCh)
 
 	go s.StartListener()
 

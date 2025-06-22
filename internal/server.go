@@ -3,19 +3,20 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
 type Server struct {
 	port      int
 	lastPhase string
+	logCh     chan<- LogMessage
 	roundCh   chan<- Round
 }
 
-func NewServer(port int, roundCh chan<- Round) *Server {
+func NewServer(port int, roundCh chan<- Round, logCh chan<- LogMessage) *Server {
 	return &Server{
 		port:    port,
+		logCh:   logCh,
 		roundCh: roundCh,
 	}
 }
@@ -42,5 +43,8 @@ func (s *Server) handleGameState(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) StartListener() {
 	http.HandleFunc("/", s.handleGameState)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", s.port), nil))
+	err := http.ListenAndServe(fmt.Sprintf(":%d", s.port), nil)
+	if err != nil {
+		s.logCh <- LogMessage{LogSeverityFail, "failed to start listener: " + err.Error()}
+	}
 }
