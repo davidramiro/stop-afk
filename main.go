@@ -1,6 +1,8 @@
 package main
 
 import (
+	"embed"
+	_ "embed"
 	"stop-afk/internal"
 )
 
@@ -9,11 +11,15 @@ const (
 	port    = 4242
 )
 
+//go:embed res/buy.wav res/start.wav
+var fs embed.FS
+
 func main() {
 	logCh := make(chan internal.LogMessage)
 	roundCh := make(chan internal.Round)
 
-	u := internal.NewUI(logCh, roundCh)
+	sp := internal.NewSoundPlayer(logCh, fs)
+	u := internal.NewUI(logCh, roundCh, sp)
 	go u.Start()
 	go u.ProcessChannels()
 

@@ -16,6 +16,7 @@ type UI struct {
 	logCh            chan LogMessage
 	roundCh          chan Round
 	latestCancelFunc func()
+	soundPlayer      *SoundPlayer
 }
 
 type LogMessage struct {
@@ -31,7 +32,7 @@ const (
 	LogSeverityOK   LogSeverity = "[green][ OK [][white] %s\n"
 )
 
-func NewUI(logCh chan LogMessage, roundCh chan Round) *UI {
+func NewUI(logCh chan LogMessage, roundCh chan Round, player *SoundPlayer) *UI {
 	app := tview.NewApplication()
 	status := tview.NewTextView().SetDynamicColors(true).
 		SetWordWrap(true)
@@ -57,11 +58,12 @@ func NewUI(logCh chan LogMessage, roundCh chan Round) *UI {
 	})
 
 	return &UI{
-		status:  status,
-		hero:    hero,
-		app:     app,
-		logCh:   logCh,
-		roundCh: roundCh,
+		status:      status,
+		hero:        hero,
+		app:         app,
+		logCh:       logCh,
+		roundCh:     roundCh,
+		soundPlayer: player,
 	}
 }
 
@@ -97,10 +99,12 @@ func (u *UI) setHero(round Round) {
 		ctx, cancel := context.WithCancel(context.Background())
 		u.latestCancelFunc = cancel
 		go u.freezeTimer(ctx)
+		go u.soundPlayer.PlaySound("buy")
 	case "live":
 		ctx, cancel := context.WithCancel(context.Background())
 		u.latestCancelFunc = cancel
 		go u.liveTimer(ctx)
+		go u.soundPlayer.PlaySound("start")
 	case "over":
 		switch round.WinTeam {
 		case "T":
