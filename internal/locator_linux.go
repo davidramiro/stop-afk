@@ -29,7 +29,7 @@ func (c *Config) findCS2() (string, error) {
 		realPath, err := filepath.EvalSymlinks(path)
 		if err == nil {
 			if _, err := os.Stat(filepath.Join(realPath, steamappsCSPath)); err == nil {
-				return realPath + steamappsCSPath, nil
+				return filepath.Join(realPath, steamappsCSPath), nil
 			}
 		}
 	}
