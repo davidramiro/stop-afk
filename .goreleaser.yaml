@@ -12,7 +12,7 @@ builds:
 checksum:
   name_template: 'checksums.txt'
 archives:
-    format_overrides:
+    - format_overrides:
       - goos: windows
         format: zip
 snapshot:
