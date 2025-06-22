@@ -3,12 +3,22 @@ version: 1
 project_name: stop-afk
 
 builds:
-  - main: ./
-    env:
-      - CGO_ENABLED=0
+  - id: linux
+    main: ./
+    goarch:
+      - amd64
     goos:
       - linux
+    env:
+      - CGO_ENABLED=1
+  - id: windows
+    main: ./
+    goarch:
+      - amd64
+    goos:
       - windows
+    env:
+      - CGO_ENABLED=0
 checksum:
   name_template: 'checksums.txt'
 archives:
