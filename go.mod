@@ -1,13 +1,13 @@
 module stop-afk
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
 	github.com/faiface/beep v1.1.0
 	github.com/gdamore/tcell/v2 v2.8.1
 	github.com/rivo/tview v0.0.0-20250501113434-0c592cd31026
-	golang.org/x/sys v0.34.0
+	golang.org/x/sys v0.36.0
 )
 
 require (
